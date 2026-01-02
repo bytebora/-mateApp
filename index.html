@@ -1,0 +1,4077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$mate • Financial Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Variables - Modern Color Palette */
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #8580FF;
+            --primary-dark: #5A52E0;
+            --secondary: #FF6584;
+            --accent: #36D1DC;
+            --success: #4CC9F0;
+            --warning: #FFB74D;
+            --danger: #FF6B6B;
+            
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --text-light: #A0AEC0;
+            
+            --bg-primary: #F7FAFC;
+            --bg-secondary: #EDF2F7;
+            --bg-card: #FFFFFF;
+            --bg-sidebar: #2D3748;
+            
+            --border-color: #E2E8F0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --sidebar-width: 260px;
+            --header-height: 70px;
+        }
+
+        /* Dark Theme */
+        .theme-dark {
+            --primary: #8580FF;
+            --primary-light: #9D99FF;
+            --primary-dark: #6C63FF;
+            
+            --text-primary: #F7FAFC;
+            --text-secondary: #CBD5E0;
+            --text-light: #A0AEC0;
+            
+            --bg-primary: #1A202C;
+            --bg-secondary: #2D3748;
+            --bg-card: #2D3748;
+            --bg-sidebar: #1A202C;
+            
+            --border-color: #4A5568;
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color var(--transition-base);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .loading-logo i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .loading-logo h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .loading-progress {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: var(--radius-full);
+        }
+
+        /* Login/Signup Screens */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: float 60s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-100px, -100px) rotate(360deg); }
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 3rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            z-index: 10;
+            animation: slideUp 0.6s ease-out;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-logo .logo-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+        }
+
+        .auth-logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-logo h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+       
+        .auth-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 6px;
+            margin-bottom: 2rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .auth-tab.active {
+            background: var(--bg-card);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Main App Layout */
+        .app-main {
+            display: none;
+        }
+
+        .app-main.active {
+            display: block;
+        }
+
+        /* Header */
+        .app-header {
+            height: var(--header-height);
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(var(--bg-card-rgb), 0.9);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            transition: background-color var(--transition-fast);
+        }
+
+        .menu-toggle:hover {
+            background: var(--bg-secondary);
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo .logo-img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+        }
+
+        .app-logo i {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .app-logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: var(--primary);
+            border-radius: 50%;
+            transition: transform var(--transition-fast);
+        }
+
+        .theme-dark .theme-toggle::after {
+            transform: translateX(24px);
+        }
+
+        .theme-toggle i {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle .fa-sun {
+            left: 6px;
+        }
+
+        .theme-toggle .fa-moon {
+            right: 6px;
+        }
+
+        /* Fullscreen Toggle */
+        .fullscreen-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            transition: background-color var(--transition-fast);
+        }
+
+        .fullscreen-toggle:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* User Menu */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            border-radius: var(--radius-full);
+            transition: background-color var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .user-menu:hover {
+            background: var(--bg-secondary);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Main Content Layout */
+        .app-content {
+            display: flex;
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* Sidebar */
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 0;
+            transition: transform var(--transition-base);
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-title {
+            padding: 0 1.5rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .nav-items {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            transition: all var(--transition-fast);
+        }
+
+        .nav-link:hover {
+            background: var(--bg-secondary);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(90deg, rgba(108, 99, 255, 0.1), transparent);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        /* Main Panel */
+        .main-panel {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            max-width: calc(100vw - var(--sidebar-width));
+        }
+
+        /* Page Container */
+        .page-container {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .page-container.active {
+            display: block;
+        }
+
+        /* Page Headers */
+        .page-header {
+            margin-bottom: 2.5rem;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Exchange Rate Banner */
+        .exchange-banner {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .exchange-label {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .exchange-label i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .exchange-input {
+            width: 200px;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .exchange-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-base);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .stat-trend {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
+            background: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Form Section */
+        .form-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #FF5252);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #36D1DC);
+            color: white;
+        }
+
+        /* Calculations Card */
+        .calculations-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        .calculation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .calculation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .calculation-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .calculation-label {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .calculation-label i {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .calculation-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .profit {
+            color: var(--success);
+        }
+
+        .loss {
+            color: var(--danger);
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table thead {
+            background: var(--bg-secondary);
+        }
+
+        .table th {
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .table tbody tr {
+            transition: background-color var(--transition-fast);
+        }
+
+        .table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-active {
+            background: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+        }
+
+        .status-pending {
+            background: rgba(255, 183, 77, 0.1);
+            color: var(--warning);
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+            color: var(--primary);
+        }
+
+        /* Reports Section */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-base);
+        }
+
+        .report-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.05), rgba(54, 209, 220, 0.05));
+            border-radius: var(--radius-md);
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Financial Overview Cards */
+        .financial-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .financial-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-base);
+        }
+
+        .financial-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .financial-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+
+        .income-icon {
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.1), rgba(54, 209, 220, 0.1));
+            color: var(--success);
+        }
+
+        .expense-icon {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 82, 82, 0.1));
+            color: var(--danger);
+        }
+
+        .balance-icon {
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(133, 128, 255, 0.1));
+            color: var(--primary);
+        }
+
+        .financial-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .financial-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Expense Entry Form */
+        .expense-form {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .expense-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Profile Page */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-sidebar {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: 600;
+            margin: 0 auto 1.5rem;
+        }
+
+        .profile-info {
+            margin-bottom: 2rem;
+        }
+
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-email {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-role {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(108, 99, 255, 0.1);
+            color: var(--primary);
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .profile-details {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .detail-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+        }
+
+        /* Settings Page */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .settings-title i {
+            color: var(--primary);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .setting-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .setting-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-secondary);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Select Input */
+        .select-input {
+            width: 200px;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        /* Number Input */
+        .number-input {
+            width: 100px;
+            padding: 0.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.05), rgba(255, 82, 82, 0.05));
+            border: 1px solid rgba(255, 107, 107, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .danger-title {
+            color: var(--danger);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .danger-text {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 3rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .app-sidebar {
+                position: fixed;
+                top: var(--header-height);
+                left: 0;
+                bottom: 0;
+                z-index: 90;
+                transform: translateX(-100%);
+            }
+
+            .app-sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .main-panel {
+                padding: 1.5rem;
+                max-width: 100vw;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .exchange-banner {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .exchange-input {
+                width: 100%;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .financial-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Header adjustments for mobile */
+            .header-right {
+                gap: 0.75rem;
+            }
+
+            .exchange-rate-mini {
+                display: none;
+            }
+        }
+
+        /* Phone Resolution */
+        @media (max-width: 480px) {
+            .app-header {
+                padding: 0 1rem;
+            }
+
+            .main-panel {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            /* Adjust header for very small screens */
+            .header-right {
+                gap: 0.5rem;
+            }
+
+            .app-logo h1 {
+                font-size: 1.4rem;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .user-menu i.fa-chevron-down {
+                display: none;
+            }
+
+            /* Form adjustments */
+            .form-section,
+            .expense-form,
+            .settings-card,
+            .profile-sidebar,
+            .profile-details {
+                padding: 1.25rem;
+            }
+
+            .stat-card {
+                padding: 1.25rem;
+            }
+
+            .stat-value {
+                font-size: 1.8rem;
+            }
+
+            /* Button adjustments */
+            .btn {
+                padding: 0.875rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            /* Table adjustments */
+            .table-header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .table-actions {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.875rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            /* Hide some table columns on very small screens */
+            .table td:nth-child(5),
+            .table th:nth-child(5) {
+                display: none;
+            }
+
+            /* Settings adjustments */
+            .setting-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .select-input,
+            .number-input {
+                width: 100%;
+            }
+
+            /* Profile adjustments */
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+
+            .profile-name {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* Very small phones */
+        @media (max-width: 360px) {
+            .auth-card {
+                padding: 1.5rem;
+            }
+
+            .app-header {
+                padding: 0 0.75rem;
+            }
+
+            .header-left {
+                gap: 1rem;
+            }
+
+            .app-logo {
+                gap: 8px;
+            }
+
+            .app-logo h1 {
+                font-size: 1.2rem;
+            }
+
+            .page-title {
+                font-size: 1.3rem;
+            }
+
+            .stats-grid {
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        /* Fullscreen styles */
+        body:fullscreen {
+            background: var(--bg-primary);
+        }
+
+        body:fullscreen .app-header {
+            padding-top: env(safe-area-inset-top);
+            padding-left: calc(2rem + env(safe-area-inset-left));
+            padding-right: calc(2rem + env(safe-area-inset-right));
+        }
+
+        body:fullscreen .main-panel {
+            padding: calc(2rem + env(safe-area-inset-top)) 2rem 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-logo">
+            <i class="fas fa-chart-line"></i>
+            <h1>$mate</h1>
+        </div>
+        <p style="color: white; margin-bottom: 1rem;">Loading Financial Tracker...</p>
+        <div class="loading-progress">
+            <div id="loadingProgressBar" class="loading-progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Authentication Screens -->
+    <div id="auth-container" class="auth-container" style="display: none;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img id="auth-logo-img" class="logo-img" alt="$mate Logo">
+                    <h1>$mate</h1>
+                </div>
+                <p class="auth-subtitle">Track orders, earnings, and grow your business</p>
+                <div class="powered-by">
+                    <span>Powered by Royal Runners</span>
+                </div>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="signin">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+                <button class="auth-tab" data-tab="signup">
+                    <i class="fas fa-user-plus"></i>
+                    Sign Up
+                </button>
+            </div>
+
+            <!-- Sign In Form -->
+            <form id="signin-form" class="auth-form active">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="login-email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="login-password" placeholder="Enter your password" required>
+                </div>
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="remember-me">
+                        <span style="font-size: 0.9rem;">Remember me</span>
+                    </label>
+                    <a href="#" style="font-size: 0.9rem; color: var(--primary); text-decoration: none;">Forgot password?</a>
+                </div>
+                <button type="submit" class="auth-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Sign Up Form -->
+            <form id="signup-form" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="signup-name" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Business Name</label>
+                    <input type="text" class="form-input" id="signup-business" placeholder="Enter your business name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="signup-email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="signup-password" placeholder="Create a password" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" class="form-input" id="signup-confirm-password" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="auth-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>By continuing, you agree to our <a href="#" style="color: var(--primary); text-decoration: none;">Terms</a> and <a href="#" style="color: var(--primary); text-decoration: none;">Privacy Policy</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app-main" class="app-main">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="app-logo">
+                    <img id="app-logo-img" class="logo-img" alt="$mate Logo">
+                    <h1>$mate</h1>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="exchange-rate-mini">
+                    <span style="color: var(--text-secondary); margin-right: 0.5rem;">1 USD =</span>
+                    <span id="miniExchangeRate" style="font-weight: 600; color: var(--primary);">2500 TZS</span>
+                </div>
+                <button class="fullscreen-toggle" id="fullscreenToggle" title="Toggle Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userAvatar">FM</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Forgiveness Madzivo</div>
+                        <div class="user-role" id="userRole">CEO</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="font-size: 0.9rem;"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="app-content">
+            <!-- Sidebar -->
+            <nav class="app-sidebar" id="appSidebar">
+                <div class="nav-section">
+                    <div class="nav-title">Main</div>
+                    <ul class="nav-items">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active" data-page="dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="new-order">
+                                <i class="fas fa-plus-circle"></i>
+                                New Order
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="orders">
+                                <i class="fas fa-shopping-cart"></i>
+                                Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="journal">
+                                <i class="fas fa-book"></i>
+                                Journal
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Finance</div>
+                    <ul class="nav-items">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="income-expense">
+                                <i class="fas fa-money-bill-wave"></i>
+                                Income & Expenses
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="reports">
+                                <i class="fas fa-chart-bar"></i>
+                                Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="analytics">
+                                <i class="fas fa-chart-line"></i>
+                                Analytics
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Account</div>
+                    <ul class="nav-items">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="profile">
+                                <i class="fas fa-user-cog"></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="settings">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Panel -->
+            <main class="main-panel">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page-container active">
+                    <div class="page-header">
+                        <h1 class="page-title">Dashboard Overview</h1>
+                        <p class="page-subtitle">Welcome back! Here's what's happening with your business today.</p>
+                    </div>
+
+                    <!-- Exchange Rate -->
+                    <div class="exchange-banner">
+                        <div class="exchange-label">
+                            <i class="fas fa-exchange-alt"></i>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary);">Exchange Rate</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">Set your TZS to USD conversion rate</div>
+                            </div>
+                        </div>
+                        <input type="number" id="exchangeRate" class="exchange-input" min="1" step="0.01" value="2500">
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <span class="stat-trend" id="ordersTrend">+0%</span>
+                            </div>
+                            <div class="stat-value" id="totalOrders">0</div>
+                            <div class="stat-label">Total Orders</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <span class="stat-trend profit" id="earningsTrend">+0%</span>
+                            </div>
+                            <div class="stat-value" id="totalEarnings">$0.00</div>
+                            <div class="stat-label">Total Earnings</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <span class="stat-trend profit" id="revenueTrend">+0%</span>
+                            </div>
+                            <div class="stat-value" id="totalRevenue">$0.00</div>
+                            <div class="stat-label">Total Revenue</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                                <span class="stat-trend profit" id="balanceTrend">+0%</span>
+                            </div>
+                            <div class="stat-value" id="currentBalance">$0.00</div>
+                            <div class="stat-label">Current Balance</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Orders Preview -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h2 class="table-title">Recent Orders</h2>
+                            <button class="action-btn" onclick="navigateTo('orders')">
+                                <i class="fas fa-eye"></i>
+                                View All
+                            </button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Product</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentOrdersBody">
+                                <!-- Recent orders will be populated here -->
+                            </tbody>
+                        </table>
+                        <div id="emptyRecentOrders" class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <h3>No Recent Orders</h3>
+                            <p>Create your first order to get started</p>
+                            <button class="btn btn-primary" onclick="navigateTo('new-order')" style="margin-top: 1rem;">
+                                <i class="fas fa-plus"></i>
+                                Create Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Order Page -->
+                <div id="new-order-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">New Order Entry</h1>
+                        <p class="page-subtitle">Add a new customer order to your tracker</p>
+                    </div>
+
+                    <div class="form-section">
+                        <form id="orderForm">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Order Date</label>
+                                    <input type="date" id="orderDate" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Customer Name (Optional)</label>
+                                    <input type="text" id="customerName" class="form-input" placeholder="Enter customer name">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Shop Name</label>
+                                    <input type="text" id="shopName" class="form-input" placeholder="Enter shop name" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Product Name / Type</label>
+                                    <input type="text" id="productName" class="form-input" placeholder="Enter product name or type" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Product Size</label>
+                                    <input type="text" id="productSize" class="form-input" placeholder="Enter product size" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Initial Price (TZS)</label>
+                                    <input type="number" id="initialPrice" class="form-input" min="0" step="100" placeholder="Enter initial price" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Additional Notes (Optional)</label>
+                                    <textarea id="notes" class="form-input" placeholder="Enter any additional notes" rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    Add Order
+                                </button>
+                                <button type="button" id="resetForm" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i>
+                                    Reset Form
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="calculations-card">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text-primary);">Order Calculations</h2>
+                        <div class="calculation-list">
+                            <div class="calculation-item">
+                                <div class="calculation-label">
+                                    <i class="fas fa-tag"></i>
+                                    <span>Initial Price</span>
+                                </div>
+                                <div class="calculation-value" id="calcInitialPrice">0 TZS</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">
+                                    <i class="fas fa-percentage"></i>
+                                    <span>30% of Initial Price</span>
+                                </div>
+                                <div class="calculation-value" id="calcThirtyPercent">0 TZS</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">
+                                    <i class="fas fa-calculator"></i>
+                                    <span>Total TZS</span>
+                                </div>
+                                <div class="calculation-value" id="calcTotalTzs">0 TZS</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    <span>Total USD</span>
+                                </div>
+                                <div class="calculation-value" id="calcTotalUsd">$0.00</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span>Your Earnings (<span id="earningsPercentage">10</span>%)</span>
+                                </div>
+                                <div class="calculation-value profit" id="calcEarnings">$0.00</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">
+                                    <i class="fas fa-balance-scale"></i>
+                                    <span>Net Result</span>
+                                </div>
+                                <div class="calculation-value profit" id="calcNetResult">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Page -->
+                <div id="orders-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">Order Management</h1>
+                        <p class="page-subtitle">View and manage all your customer orders</p>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h2 class="table-title">All Orders</h2>
+                            <div class="table-actions">
+                                <button class="action-btn" id="refreshOrders">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
+                                </button>
+                                <button class="action-btn" id="exportOrders">
+                                    <i class="fas fa-file-export"></i>
+                                    Export
+                                </button>
+                                <button class="action-btn" onclick="navigateTo('new-order')">
+                                    <i class="fas fa-plus"></i>
+                                    New Order
+                                </button>
+                            </div>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Shop</th>
+                                    <th>Product</th>
+                                    <th>Size</th>
+                                    <th>Price (TZS)</th>
+                                    <th>Earnings</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Orders will be populated here -->
+                            </tbody>
+                        </table>
+                        <div id="emptyOrders" class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <h3>No Orders Yet</h3>
+                            <p>Add your first order from the New Order page</p>
+                            <button class="btn btn-primary" onclick="navigateTo('new-order')" style="margin-top: 1rem;">
+                                <i class="fas fa-plus"></i>
+                                Create Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Journal Page -->
+                <div id="journal-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">Order Journal</h1>
+                        <p class="page-subtitle">Complete history of all your orders and calculations</p>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h2 class="table-title">Order Journal</h2>
+                            <div class="table-actions">
+                                <button class="action-btn" id="filterJournal">
+                                    <i class="fas fa-filter"></i>
+                                    Filter
+                                </button>
+                                <button class="action-btn" id="printJournal">
+                                    <i class="fas fa-print"></i>
+                                    Print
+                                </button>
+                                <button class="action-btn" id="exportJournal">
+                                    <i class="fas fa-file-pdf"></i>
+                                    Export PDF
+                                </button>
+                            </div>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Shop</th>
+                                    <th>Product</th>
+                                    <th>Size</th>
+                                    <th>Initial (TZS)</th>
+                                    <th>30% (TZS)</th>
+                                    <th>Total (TZS)</th>
+                                    <th>Total (USD)</th>
+                                    <th>Earnings</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="journalTableBody">
+                                <!-- Journal entries will be populated here -->
+                            </tbody>
+                        </table>
+                        <div id="emptyJournal" class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <h3>No Journal Entries</h3>
+                            <p>Your order journal will appear here</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Income & Expenses Page -->
+                <div id="income-expense-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">Income & Expenses</h1>
+                        <p class="page-subtitle">Track your earnings against business expenses</p>
+                    </div>
+
+                    <!-- Financial Overview Cards -->
+                    <div class="financial-cards">
+                        <div class="financial-card">
+                            <div class="financial-header">
+                                <div class="financial-icon income-icon">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div>
+                                    <span class="stat-trend profit">+12%</span>
+                                </div>
+                            </div>
+                            <div class="financial-amount" id="totalIncome">$0.00</div>
+                            <div class="financial-label">Total Income (Earnings)</div>
+                            <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+                                From <span id="incomeCount">0</span> orders
+                            </div>
+                        </div>
+
+                        <div class="financial-card">
+                            <div class="financial-header">
+                                <div class="financial-icon expense-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div>
+                                    <span class="stat-trend loss">-5%</span>
+                                </div>
+                            </div>
+                            <div class="financial-amount" id="totalExpenses">$0.00</div>
+                            <div class="financial-label">Total Expenses</div>
+                            <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+                                <span id="expenseCount">0</span> expense items
+                            </div>
+                        </div>
+
+                        <div class="financial-card">
+                            <div class="financial-header">
+                                <div class="financial-icon balance-icon">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <div>
+                                    <span class="stat-trend profit">+15%</span>
+                                </div>
+                            </div>
+                            <div class="financial-amount" id="netBalance">$0.00</div>
+                            <div class="financial-label">Net Balance</div>
+                            <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+                                Income - Expenses
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Entry Form -->
+                    <div class="expense-form">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text-primary);">Add New Expense</h2>
+                        <form id="expenseForm">
+                            <div class="expense-form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Expense Date</label>
+                                    <input type="date" id="expenseDate" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Expense Type</label>
+                                    <select id="expenseType" class="form-input" required>
+                                        <option value="">Select type</option>
+                                        <option value="transport">Transport</option>
+                                        <option value="supplies">Supplies</option>
+                                        <option value="utilities">Utilities</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <input type="text" id="expenseDescription" class="form-input" placeholder="Enter expense description" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Amount (TZS)</label>
+                                    <input type="number" id="expenseAmount" class="form-input" min="0" step="100" placeholder="Enter amount" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Payment Method</label>
+                                    <select id="paymentMethod" class="form-input" required>
+                                        <option value="cash">Cash</option>
+                                        <option value="mobile">Mobile Money</option>
+                                        <option value="bank">Bank Transfer</option>
+                                        <option value="card">Card</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Notes (Optional)</label>
+                                    <textarea id="expenseNotes" class="form-input" placeholder="Enter any notes" rows="2"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    Add Expense
+                                </button>
+                                <button type="button" id="resetExpenseForm" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i>
+                                    Reset
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Expenses Table -->
+                    <div class="table-container" style="margin-top: 2rem;">
+                        <div class="table-header">
+                            <h2 class="table-title">Expense History</h2>
+                            <div class="table-actions">
+                                <button class="action-btn" id="filterExpenses">
+                                    <i class="fas fa-filter"></i>
+                                    Filter
+                                </button>
+                                <button class="action-btn" id="exportExpenses">
+                                    <i class="fas fa-file-export"></i>
+                                    Export
+                                </button>
+                            </div>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Amount (TZS)</th>
+                                    <th>Amount (USD)</th>
+                                    <th>Payment Method</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody">
+                                <!-- Expenses will be populated here -->
+                            </tbody>
+                        </table>
+                        <div id="emptyExpenses" class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <h3>No Expenses Recorded</h3>
+                            <p>Add your first expense to start tracking</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Page -->
+                <div id="reports-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">Financial Reports</h1>
+                        <p class="page-subtitle">Detailed reports and performance analysis</p>
+                    </div>
+
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Monthly Performance</h2>
+                            <div class="chart-placeholder">
+                                <div style="text-align: center;">
+                                    <i class="fas fa-chart-pie" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i>
+                                    <p>Monthly performance chart</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="report-card">
+                            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Key Metrics</h2>
+                            <div class="calculation-list">
+                                <div class="calculation-item">
+                                    <div class="calculation-label">
+                                        <i class="fas fa-chart-line"></i>
+                                        <span>Avg. Order Value</span>
+                                    </div>
+                                    <div class="calculation-value" id="avgOrderValue">$0.00</div>
+                                </div>
+                                <div class="calculation-item">
+                                    <div class="calculation-label">
+                                        <i class="fas fa-box"></i>
+                                        <span>Total Products</span>
+                                    </div>
+                                    <div class="calculation-value" id="totalProducts">0</div>
+                                </div>
+                                <div class="calculation-item">
+                                    <div class="calculation-label">
+                                        <i class="fas fa-star"></i>
+                                        <span>Top Product</span>
+                                    </div>
+                                    <div class="calculation-value" id="popularProduct">-</div>
+                                </div>
+                                <div class="calculation-item">
+                                    <div class="calculation-label">
+                                        <i class="fas fa-store"></i>
+                                        <span>Top Shop</span>
+                                    </div>
+                                    <div class="calculation-value" id="topShop">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <button id="generatePDF" class="btn btn-success">
+                            <i class="fas fa-file-pdf"></i>
+                            Generate PDF Report
+                        </button>
+                        <button id="exportData" class="btn btn-secondary" style="margin-left: 1rem;">
+                            <i class="fas fa-file-export"></i>
+                            Export All Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">Business Analytics</h1>
+                        <p class="page-subtitle">Advanced analytics and insights</p>
+                    </div>
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Sales Trends</h2>
+                            <div class="chart-placeholder">
+                                <div style="text-align: center;">
+                                    <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i>
+                                    <p>Sales trend analysis chart</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="report-card">
+                            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Customer Insights</h2>
+                            <div class="chart-placeholder">
+                                <div style="text-align: center;">
+                                    <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i>
+                                    <p>Customer behavior insights</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Page -->
+                <div id="profile-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">Profile Settings</h1>
+                        <p class="page-subtitle">Manage your account and personal information</p>
+                    </div>
+
+                    <div class="profile-grid">
+                        <div class="profile-sidebar">
+                            <div class="profile-avatar" id="profileAvatar">
+                                JD
+                            </div>
+                            <div class="profile-info">
+                                <h3 class="profile-name" id="profileName">Forgiveness Madzivo</h3>
+                                <p class="profile-email" id="profileEmail">madzivof@yahoo.com</p>
+                                <span class="profile-role" id="profileRole">CEO</span>
+                            </div>
+                            <div style="margin-top: 2rem;">
+                                <button class="btn btn-secondary" onclick="changePassword()" style="width: 100%;">
+                                    <i class="fas fa-key"></i>
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="profile-details">
+                            <h3 style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--text-primary);">Personal Information</h3>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Full Name</div>
+                                <input type="text" class="form-input" id="profileFullName" value="Forgiveness Madzivo">
+                            </div>
+
+                            <div class="detail-group">
+                                <div class="detail-label">Business Name</div>
+                                <input type="text" class="form-input" id="profileBusinessName" value="My Business">
+                            </div>
+
+                            <div class="detail-group">
+                                <div class="detail-label">Email Address</div>
+                                <input type="email" class="form-input" id="profileEmailInput" value="madzivof@yahoo.com">
+                            </div>
+
+                            <div class="detail-group">
+                                <div class="detail-label">Phone Number</div>
+                                <input type="tel" class="form-input" id="profilePhone" placeholder="Enter phone number">
+                            </div>
+
+                            <div class="detail-group">
+                                <div class="detail-label">Business Address</div>
+                                <textarea class="form-input" id="profileAddress" rows="3" placeholder="Enter business address"></textarea>
+                            </div>
+
+                            <div class="detail-group">
+                                <div class="detail-label">Timezone</div>
+                                <select class="form-input" id="profileTimezone">
+                                    <option value="Africa/Dar_es_Salaam">East Africa Time (EAT)</option>
+                                    <option value="UTC">UTC</option>
+                                    <option value="America/New_York">Eastern Time (ET)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-primary" onclick="saveProfile()">
+                                    <i class="fas fa-save"></i>
+                                    Save Changes
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetProfile()">
+                                    <i class="fas fa-redo"></i>
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page-container">
+                    <div class="page-header">
+                        <h1 class="page-title">Application Settings</h1>
+                        <p class="page-subtitle">Customize your $mate experience</p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <!-- General Settings -->
+                        <div class="settings-card">
+                            <div class="settings-section">
+                                <h3 class="settings-title">
+                                    <i class="fas fa-cog"></i>
+                                    General Settings
+                                </h3>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Default Currency</span>
+                                        <span class="setting-desc">Set your primary currency</span>
+                                    </div>
+                                    <select class="select-input" id="defaultCurrency">
+                                        <option value="TZS">Tanzanian Shilling (TZS)</option>
+                                        <option value="USD">US Dollar (USD)</option>
+                                    </select>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Date Format</span>
+                                        <span class="setting-desc">How dates are displayed</span>
+                                    </div>
+                                    <select class="select-input" id="dateFormat">
+                                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                    </select>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Default Exchange Rate</span>
+                                        <span class="setting-desc">TZS to USD conversion rate</span>
+                                    </div>
+                                    <input type="number" class="number-input" id="defaultExchangeRate" value="2500" min="1" step="0.01">
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Earnings Percentage</span>
+                                        <span class="setting-desc">Your earnings percentage from orders</span>
+                                    </div>
+                                    <input type="number" class="number-input" id="earningsPercent" value="10" min="1" max="100" step="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Settings -->
+                        <div class="settings-card">
+                            <div class="settings-section">
+                                <h3 class="settings-title">
+                                    <i class="fas fa-bell"></i>
+                                    Notifications
+                                </h3>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Email Notifications</span>
+                                        <span class="setting-desc">Receive email alerts</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="emailNotifications" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Order Alerts</span>
+                                        <span class="setting-desc">Notify on new orders</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="orderAlerts" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Weekly Reports</span>
+                                        <span class="setting-desc">Send weekly summaries</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="weeklyReports">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data & Privacy -->
+                        <div class="settings-card">
+                            <div class="settings-section">
+                                <h3 class="settings-title">
+                                    <i class="fas fa-database"></i>
+                                    Data & Privacy
+                                </h3>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Auto Backup</span>
+                                        <span class="setting-desc">Automatic data backup</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="autoBackup" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Data Retention</span>
+                                        <span class="setting-desc">Keep data for (months)</span>
+                                    </div>
+                                    <select class="select-input" id="dataRetention">
+                                        <option value="3">3 months</option>
+                                        <option value="6">6 months</option>
+                                        <option value="12" selected>12 months</option>
+                                        <option value="24">24 months</option>
+                                    </select>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Export Format</span>
+                                        <span class="setting-desc">Default export format</span>
+                                    </div>
+                                    <select class="select-input" id="exportFormat">
+                                        <option value="csv">CSV</option>
+                                        <option value="pdf">PDF</option>
+                                        <option value="excel">Excel</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <h3 class="settings-title">
+                                    <i class="fas fa-image"></i>
+                                    Logo Settings
+                                </h3>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-label">
+                                        <span class="setting-name">Custom Logo</span>
+                                        <span class="setting-desc">Upload your personal logo</span>
+                                    </div>
+                                    <button class="action-btn" onclick="uploadLogo()">
+                                        <i class="fas fa-upload"></i>
+                                        Upload Logo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="danger-zone">
+                        <h3 class="danger-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Danger Zone
+                        </h3>
+                        <p class="danger-text">
+                            These actions are irreversible. Please proceed with caution.
+                        </p>
+                        
+                        <div class="form-actions">
+                            <button class="btn btn-danger" onclick="clearAllData()">
+                                <i class="fas fa-trash"></i>
+                                Clear All Data
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportBackup()">
+                                <i class="fas fa-download"></i>
+                                Export Backup
+                            </button>
+                            <button class="btn btn-secondary" onclick="importBackup()">
+                                <i class="fas fa-upload"></i>
+                                Import Backup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>$mate - Complete Financial Tracker v3.0</p>
+            
+            <div class="footer-links">
+                <a href="#" onclick="navigateTo('dashboard')">Home</a>
+                <a href="#" onclick="navigateTo('reports')">Reports</a>
+                <a href="#" onclick="navigateTo('profile')">Profile</a>
+                <a href="#" onclick="navigateTo('settings')">Settings</a>
+                <a href="https://royalrunner.com" target="_blank">Support</a>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-light);">
+              <p>Powered by RoyalRunners</a></p>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Application State
+        let orders = [];
+        let expenses = [];
+        let exchangeRate = 2500;
+        let earningsPercentage = 10;
+        let currentUser = null;
+        let currentPage = 'dashboard';
+        let userProfile = {
+            name: 'Forgiveness Madzivo',
+            email: 'madzivof@yahoo.com',
+            businessName: 'Royal Services',
+            phone: '+255698507708, +263786132777',
+            address: '',
+            timezone: 'Africa/Dar_es_Salaam',
+            role: 'CEO'
+        };
+        let appSettings = {
+            defaultCurrency: 'TZS',
+            dateFormat: 'MM/DD/YYYY',
+            defaultExchangeRate: 2500,
+            earningsPercentage: 10,
+            emailNotifications: true,
+            orderAlerts: true,
+            weeklyReports: false,
+            autoBackup: true,
+            dataRetention: 12,
+            exportFormat: 'csv'
+        };
+        let users = [];
+        let isFullscreen = false;
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+        });
+
+        function initApp() {
+            // Show loading screen
+            showLoadingScreen();
+            
+            // Simulate loading progress
+            simulateLoadingProgress();
+            
+            // After loading, initialize the rest
+            setTimeout(() => {
+                loadFromStorage();
+                setupEventListeners();
+                updateDashboard();
+                updateCalculations();
+                
+                // Set current date for forms
+                document.getElementById('orderDate').valueAsDate = new Date();
+                document.getElementById('expenseDate').valueAsDate = new Date();
+                
+                // Load logo from localStorage
+                loadLogo();
+                
+                // Check if user is already logged in
+                checkAutoLogin();
+                
+                // Hide loading screen
+                hideLoadingScreen();
+            }, 1500);
+        }
+
+        function showLoadingScreen() {
+            document.getElementById('loadingScreen').classList.remove('hidden');
+        }
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+
+        function simulateLoadingProgress() {
+            const progressBar = document.getElementById('loadingProgressBar');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                }
+                progressBar.style.width = `${progress}%`;
+            }, 100);
+        }
+
+        function toggleFullscreen() {
+            const fullscreenToggle = document.getElementById('fullscreenToggle');
+            
+            if (!isFullscreen) {
+                // Enter fullscreen
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+                
+                fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenToggle.title = 'Exit Fullscreen';
+                isFullscreen = true;
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                
+                fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenToggle.title = 'Enter Fullscreen';
+                isFullscreen = false;
+            }
+        }
+
+        function setupEventListeners() {
+            // Fullscreen toggle
+            document.getElementById('fullscreenToggle').addEventListener('click', toggleFullscreen);
+            
+            // Fullscreen change event
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+            // Auth Tabs
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.dataset.tab;
+                    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+                    document.getElementById(`${tabId}-form`).classList.add('active');
+                });
+            });
+
+            // Auth Forms
+            document.getElementById('signin-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleLogin();
+            });
+
+            document.getElementById('signup-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleSignup();
+            });
+
+            // Theme Toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Menu Toggle (Mobile)
+            document.getElementById('menuToggle').addEventListener('click', () => {
+                document.getElementById('appSidebar').classList.toggle('active');
+            });
+
+            // Navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageId = this.dataset.page;
+                    navigateTo(pageId);
+                });
+            });
+
+            // Close sidebar when clicking outside (mobile)
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024) {
+                    const sidebar = document.getElementById('appSidebar');
+                    const menuToggle = document.getElementById('menuToggle');
+                    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                    }
+                }
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', showAuth);
+
+            // User Menu
+            document.getElementById('userMenu').addEventListener('click', () => {
+                navigateTo('profile');
+            });
+
+            // Exchange Rate
+            const exchangeRateInput = document.getElementById('exchangeRate');
+            exchangeRateInput.addEventListener('input', function() {
+                exchangeRate = parseFloat(this.value) || 2500;
+                document.getElementById('miniExchangeRate').textContent = `${exchangeRate} TZS`;
+                updateCalculations();
+                updateDashboard();
+                updateIncomeExpensePage();
+                saveToStorage();
+            });
+
+            // Order Form
+            document.getElementById('orderForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addOrder();
+            });
+
+            // Reset Order Form
+            document.getElementById('resetForm').addEventListener('click', resetOrderForm);
+
+            // Initial Price Input (realtime calculations)
+            document.getElementById('initialPrice').addEventListener('input', updateCalculations);
+
+            // Expense Form
+            document.getElementById('expenseForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addExpense();
+            });
+
+            // Reset Expense Form
+            document.getElementById('resetExpenseForm').addEventListener('click', resetExpenseForm);
+
+            // Buttons
+            document.getElementById('generatePDF').addEventListener('click', generatePDFReport);
+            document.getElementById('refreshOrders').addEventListener('click', updateOrdersTable);
+            document.getElementById('exportOrders').addEventListener('click', exportOrders);
+            document.getElementById('printJournal').addEventListener('click', printJournal);
+            document.getElementById('exportJournal').addEventListener('click', exportJournalPDF);
+            document.getElementById('filterExpenses').addEventListener('click', filterExpenses);
+            document.getElementById('exportExpenses').addEventListener('click', exportExpenses);
+            document.getElementById('exportData').addEventListener('click', exportAllData);
+
+            // Settings
+            document.getElementById('defaultCurrency').addEventListener('change', saveSettings);
+            document.getElementById('dateFormat').addEventListener('change', saveSettings);
+            document.getElementById('defaultExchangeRate').addEventListener('change', saveSettings);
+            document.getElementById('earningsPercent').addEventListener('change', saveSettings);
+            document.getElementById('emailNotifications').addEventListener('change', saveSettings);
+            document.getElementById('orderAlerts').addEventListener('change', saveSettings);
+            document.getElementById('weeklyReports').addEventListener('change', saveSettings);
+            document.getElementById('autoBackup').addEventListener('change', saveSettings);
+            document.getElementById('dataRetention').addEventListener('change', saveSettings);
+            document.getElementById('exportFormat').addEventListener('change', saveSettings);
+        }
+
+        function handleFullscreenChange() {
+            const fullscreenToggle = document.getElementById('fullscreenToggle');
+            if (document.fullscreenElement || document.webkitFullscreenElement || 
+                document.mozFullScreenElement || document.msFullscreenElement) {
+                fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenToggle.title = 'Exit Fullscreen';
+                isFullscreen = true;
+            } else {
+                fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenToggle.title = 'Enter Fullscreen';
+                isFullscreen = false;
+            }
+        }
+
+        function checkAutoLogin() {
+            const rememberMe = localStorage.getItem('$mate_rememberMe') === 'true';
+            const savedEmail = localStorage.getItem('$mate_lastEmail');
+            
+            if (rememberMe && savedEmail) {
+                document.getElementById('login-email').value = savedEmail;
+                document.getElementById('remember-me').checked = true;
+                
+                // Try to find user in users array
+                const user = users.find(u => u.email === savedEmail);
+                if (user) {
+                    // Auto-login after a short delay
+                    setTimeout(() => {
+                        currentUser = user;
+                        userProfile.name = user.name;
+                        userProfile.email = user.email;
+                        userProfile.businessName = user.businessName || '';
+                        showApp();
+                    }, 500);
+                }
+            } else {
+                // Show auth screen if no auto-login
+                setTimeout(() => {
+                    document.getElementById('auth-container').style.display = 'flex';
+                }, 300);
+            }
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            
+            // Save remember me preference
+            localStorage.setItem('$mate_rememberMe', rememberMe);
+            if (rememberMe) {
+                localStorage.setItem('$mate_lastEmail', email);
+            } else {
+                localStorage.removeItem('$mate_lastEmail');
+            }
+            
+            // Find user in users array
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                userProfile.name = user.name;
+                userProfile.email = user.email;
+                userProfile.businessName = user.businessName || '';
+                
+                showApp();
+                updateUserInfo();
+                document.getElementById('signin-form').reset();
+                showNotification('Login successful!', 'success');
+            } else {
+                // For demo purposes, create a temporary user if not found
+                currentUser = {
+                    name: email.split('@')[0] || 'User',
+                    email: email,
+                    businessName: '',
+                    role: 'Business Owner'
+                };
+                
+                userProfile.email = email;
+                userProfile.name = currentUser.name;
+                
+                showApp();
+                updateUserInfo();
+                document.getElementById('signin-form').reset();
+                showNotification('Welcome! Account created for demo purposes.', 'info');
+            }
+        }
+
+        function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const businessName = document.getElementById('signup-business').value.trim();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long!');
+                return;
+            }
+            
+            // Check if user already exists
+            if (users.some(u => u.email === email)) {
+                alert('User with this email already exists!');
+                return;
+            }
+            
+            // Create new user
+            const newUser = {
+                name: name,
+                email: email,
+                password: password,
+                businessName: businessName,
+                role: 'Business Owner'
+            };
+            
+            users.push(newUser);
+            saveToStorage();
+            
+            currentUser = newUser;
+            userProfile.name = name;
+            userProfile.email = email;
+            userProfile.businessName = businessName;
+            
+            showApp();
+            updateUserInfo();
+            updateProfilePage();
+            document.getElementById('signup-form').reset();
+            document.querySelector('[data-tab="signin"]').click();
+            
+            showNotification('Account created successfully!', 'success');
+        }
+
+        function showApp() {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-main').classList.add('active');
+            updateUserInfo();
+            updateProfilePage();
+            updateSettingsPage();
+        }
+
+        function showAuth() {
+            document.getElementById('auth-container').style.display = 'flex';
+            document.getElementById('app-main').classList.remove('active');
+            currentUser = null;
+        }
+
+        function updateUserInfo() {
+            if (currentUser) {
+                const userAvatar = document.getElementById('userAvatar');
+                const userName = document.getElementById('userName');
+                const userRole = document.getElementById('userRole');
+                
+                userAvatar.textContent = userProfile.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                userName.textContent = userProfile.name;
+                userRole.textContent = userProfile.role;
+            }
+        }
+
+        function updateProfilePage() {
+            document.getElementById('profileAvatar').textContent = userProfile.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            document.getElementById('profileName').textContent = userProfile.name;
+            document.getElementById('profileEmail').textContent = userProfile.email;
+            document.getElementById('profileRole').textContent = userProfile.role;
+            
+            document.getElementById('profileFullName').value = userProfile.name;
+            document.getElementById('profileBusinessName').value = userProfile.businessName;
+            document.getElementById('profileEmailInput').value = userProfile.email;
+            document.getElementById('profilePhone').value = userProfile.phone || '';
+            document.getElementById('profileAddress').value = userProfile.address || '';
+            document.getElementById('profileTimezone').value = userProfile.timezone;
+        }
+
+        function updateSettingsPage() {
+            document.getElementById('defaultCurrency').value = appSettings.defaultCurrency;
+            document.getElementById('dateFormat').value = appSettings.dateFormat;
+            document.getElementById('defaultExchangeRate').value = appSettings.defaultExchangeRate;
+            document.getElementById('earningsPercent').value = appSettings.earningsPercentage;
+            document.getElementById('emailNotifications').checked = appSettings.emailNotifications;
+            document.getElementById('orderAlerts').checked = appSettings.orderAlerts;
+            document.getElementById('weeklyReports').checked = appSettings.weeklyReports;
+            document.getElementById('autoBackup').checked = appSettings.autoBackup;
+            document.getElementById('dataRetention').value = appSettings.dataRetention;
+            document.getElementById('exportFormat').value = appSettings.exportFormat;
+            
+            // Update earnings percentage display
+            document.getElementById('earningsPercentage').textContent = appSettings.earningsPercentage;
+        }
+
+        function saveProfile() {
+            userProfile.name = document.getElementById('profileFullName').value;
+            userProfile.businessName = document.getElementById('profileBusinessName').value;
+            userProfile.email = document.getElementById('profileEmailInput').value;
+            userProfile.phone = document.getElementById('profilePhone').value;
+            userProfile.address = document.getElementById('profileAddress').value;
+            userProfile.timezone = document.getElementById('profileTimezone').value;
+            
+            // Update current user if email matches
+            if (currentUser && currentUser.email === userProfile.email) {
+                currentUser.name = userProfile.name;
+                currentUser.businessName = userProfile.businessName;
+                
+                // Update user in users array
+                const userIndex = users.findIndex(u => u.email === userProfile.email);
+                if (userIndex !== -1) {
+                    users[userIndex].name = userProfile.name;
+                    users[userIndex].businessName = userProfile.businessName;
+                }
+            }
+            
+            updateUserInfo();
+            updateProfilePage();
+            saveToStorage();
+            showNotification('Profile saved successfully!', 'success');
+        }
+
+        function resetProfile() {
+            updateProfilePage();
+            showNotification('Profile form reset', 'info');
+        }
+
+        function changePassword() {
+            const oldPassword = prompt('Enter your current password:');
+            if (!oldPassword) return;
+            
+            // Verify old password
+            const userIndex = users.findIndex(u => u.email === currentUser.email);
+            if (userIndex === -1 || users[userIndex].password !== oldPassword) {
+                alert('Incorrect current password!');
+                return;
+            }
+            
+            const newPassword = prompt('Enter new password:');
+            if (!newPassword || newPassword.length < 6) {
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+            
+            const confirmPassword = prompt('Confirm new password:');
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            users[userIndex].password = newPassword;
+            saveToStorage();
+            showNotification('Password changed successfully!', 'success');
+        }
+
+        function saveSettings() {
+            appSettings.defaultCurrency = document.getElementById('defaultCurrency').value;
+            appSettings.dateFormat = document.getElementById('dateFormat').value;
+            appSettings.defaultExchangeRate = parseFloat(document.getElementById('defaultExchangeRate').value) || 2500;
+            appSettings.earningsPercentage = parseFloat(document.getElementById('earningsPercent').value) || 10;
+            appSettings.emailNotifications = document.getElementById('emailNotifications').checked;
+            appSettings.orderAlerts = document.getElementById('orderAlerts').checked;
+            appSettings.weeklyReports = document.getElementById('weeklyReports').checked;
+            appSettings.autoBackup = document.getElementById('autoBackup').checked;
+            appSettings.dataRetention = parseInt(document.getElementById('dataRetention').value);
+            appSettings.exportFormat = document.getElementById('exportFormat').value;
+            
+            // Update earnings percentage display
+            earningsPercentage = appSettings.earningsPercentage;
+            document.getElementById('earningsPercentage').textContent = earningsPercentage;
+            
+            // Update exchange rate if changed in settings
+            if (exchangeRate !== appSettings.defaultExchangeRate) {
+                exchangeRate = appSettings.defaultExchangeRate;
+                document.getElementById('exchangeRate').value = exchangeRate;
+                document.getElementById('miniExchangeRate').textContent = `${exchangeRate} TZS`;
+                updateCalculations();
+                updateDashboard();
+                updateIncomeExpensePage();
+            }
+            
+            saveToStorage();
+            updateCalculations();
+            showNotification('Settings saved successfully!', 'success');
+        }
+
+        function uploadLogo() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const logoData = event.target.result;
+                    localStorage.setItem('$mate_logo', logoData);
+                    loadLogo();
+                    showNotification('Logo uploaded successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            };
+            
+            input.click();
+        }
+
+        function loadLogo() {
+            const logoData = localStorage.getItem('$mate_logo');
+            const authLogo = document.getElementById('auth-logo-img');
+            const appLogo = document.getElementById('app-logo-img');
+            
+            if (logoData) {
+                authLogo.src = logoData;
+                appLogo.src = logoData;
+            } else {
+                // Default logo
+                authLogo.src = '';
+                appLogo.src = '';
+                authLogo.innerHTML = '<i class="fas fa-chart-line"></i>';
+                appLogo.innerHTML = '<i class="fas fa-chart-line"></i>';
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ WARNING: This will delete ALL your orders and expenses!\n\nThis action cannot be undone. Are you absolutely sure?')) {
+                orders = [];
+                expenses = [];
+                saveToStorage();
+                updateDashboard();
+                updateOrdersTable();
+                updateJournalTable();
+                updateIncomeExpensePage();
+                updateReports();
+                showNotification('All data has been cleared.', 'info');
+            }
+        }
+
+        function exportBackup() {
+            const backupData = {
+                orders: orders,
+                expenses: expenses,
+                users: users,
+                userProfile: userProfile,
+                appSettings: appSettings,
+                exchangeRate: exchangeRate,
+                backupDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            downloadFile(dataStr, `$mate-backup-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+            showNotification('Backup exported successfully!', 'success');
+        }
+
+        function importBackup() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    try {
+                        const backupData = JSON.parse(event.target.result);
+                        
+                        if (confirm('Import this backup? This will replace your current data.')) {
+                            orders = backupData.orders || [];
+                            expenses = backupData.expenses || [];
+                            users = backupData.users || [];
+                            userProfile = backupData.userProfile || userProfile;
+                            appSettings = backupData.appSettings || appSettings;
+                            exchangeRate = backupData.exchangeRate || 2500;
+                            earningsPercentage = appSettings.earningsPercentage || 10;
+                            
+                            saveToStorage();
+                            updateDashboard();
+                            updateOrdersTable();
+                            updateJournalTable();
+                            updateIncomeExpensePage();
+                            updateReports();
+                            updateProfilePage();
+                            updateSettingsPage();
+                            
+                            document.getElementById('exchangeRate').value = exchangeRate;
+                            document.getElementById('miniExchangeRate').textContent = `${exchangeRate} TZS`;
+                            document.getElementById('earningsPercentage').textContent = earningsPercentage;
+                            
+                            showNotification('Backup imported successfully!', 'success');
+                        }
+                    } catch (error) {
+                        showNotification('Error importing backup. Invalid file format.', 'danger');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('theme-dark');
+            saveToStorage();
+        }
+
+        function navigateTo(pageId) {
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+            
+            // Show selected page
+            document.querySelectorAll('.page-container').forEach(page => page.classList.remove('active'));
+            document.getElementById(`${pageId}-page`).classList.add('active');
+            
+            // Update current page
+            currentPage = pageId;
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 1024) {
+                document.getElementById('appSidebar').classList.remove('active');
+            }
+            
+            // Load page-specific data
+            switch(pageId) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'orders':
+                    updateOrdersTable();
+                    break;
+                case 'journal':
+                    updateJournalTable();
+                    break;
+                case 'income-expense':
+                    updateIncomeExpensePage();
+                    break;
+                case 'reports':
+                    updateReports();
+                    break;
+                case 'profile':
+                    updateProfilePage();
+                    break;
+                case 'settings':
+                    updateSettingsPage();
+                    break;
+            }
+        }
+
+        // Order Management Functions
+        function addOrder() {
+            const orderDate = document.getElementById('orderDate').value;
+            const customerName = document.getElementById('customerName').value.trim() || 'Walk-in Customer';
+            const shopName = document.getElementById('shopName').value.trim();
+            const productName = document.getElementById('productName').value.trim();
+            const productSize = document.getElementById('productSize').value.trim();
+            const initialPrice = parseFloat(document.getElementById('initialPrice').value) || 0;
+            const notes = document.getElementById('notes').value.trim();
+            
+            if (!orderDate || !shopName || !productName || !productSize || initialPrice <= 0) {
+                alert('Please fill in all required fields with valid values.');
+                return;
+            }
+            
+            const thirtyPercent = initialPrice * 0.3;
+            const totalTzs = initialPrice + thirtyPercent;
+            const totalUsd = exchangeRate > 0 ? totalTzs / exchangeRate : 0;
+            const earnings = totalUsd * (earningsPercentage / 100);
+            const netResult = earnings;
+            
+            const order = {
+                id: Date.now(),
+                orderDate,
+                customerName,
+                shopName,
+                productName,
+                productSize,
+                initialPrice,
+                thirtyPercent,
+                totalTzs,
+                totalUsd,
+                earnings,
+                netResult,
+                notes,
+                timestamp: new Date().toISOString(),
+                status: 'completed'
+            };
+            
+            orders.unshift(order);
+            saveToStorage();
+            
+            updateDashboard();
+            updateOrdersTable();
+            updateJournalTable();
+            updateReports();
+            updateIncomeExpensePage();
+            
+            resetOrderForm();
+            showNotification('Order added successfully!', 'success');
+            
+            // Navigate to orders page
+            navigateTo('orders');
+        }
+
+        function deleteOrder(orderId) {
+            if (confirm('Are you sure you want to delete this order?')) {
+                orders = orders.filter(order => order.id !== orderId);
+                saveToStorage();
+                updateDashboard();
+                updateOrdersTable();
+                updateJournalTable();
+                updateReports();
+                updateIncomeExpensePage();
+                showNotification('Order deleted successfully', 'info');
+            }
+        }
+
+        function resetOrderForm() {
+            document.getElementById('orderForm').reset();
+            document.getElementById('orderDate').valueAsDate = new Date();
+            updateCalculations();
+        }
+
+        // Expense Management Functions
+        function addExpense() {
+            const expenseDate = document.getElementById('expenseDate').value;
+            const expenseType = document.getElementById('expenseType').value;
+            const expenseDescription = document.getElementById('expenseDescription').value.trim();
+            const expenseAmount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const expenseNotes = document.getElementById('expenseNotes').value.trim();
+            
+            if (!expenseDate || !expenseType || !expenseDescription || expenseAmount <= 0) {
+                alert('Please fill in all required fields with valid values.');
+                return;
+            }
+            
+            const expenseAmountUsd = exchangeRate > 0 ? expenseAmount / exchangeRate : 0;
+            
+            const expense = {
+                id: Date.now(),
+                expenseDate,
+                expenseType,
+                expenseDescription,
+                expenseAmount,
+                expenseAmountUsd,
+                paymentMethod,
+                expenseNotes,
+                timestamp: new Date().toISOString()
+            };
+            
+            expenses.unshift(expense);
+            saveToStorage();
+            
+            updateIncomeExpensePage();
+            updateDashboard();
+            updateReports();
+            
+            resetExpenseForm();
+            showNotification('Expense added successfully!', 'success');
+        }
+
+        function deleteExpense(expenseId) {
+            if (confirm('Are you sure you want to delete this expense?')) {
+                expenses = expenses.filter(expense => expense.id !== expenseId);
+                saveToStorage();
+                updateIncomeExpensePage();
+                updateDashboard();
+                updateReports();
+                showNotification('Expense deleted successfully', 'info');
+            }
+        }
+
+        function resetExpenseForm() {
+            document.getElementById('expenseForm').reset();
+            document.getElementById('expenseDate').valueAsDate = new Date();
+        }
+
+        // Update Functions
+        function updateCalculations() {
+            const initialPrice = parseFloat(document.getElementById('initialPrice').value) || 0;
+            const thirtyPercent = initialPrice * 0.3;
+            const totalTzs = initialPrice + thirtyPercent;
+            const totalUsd = exchangeRate > 0 ? totalTzs / exchangeRate : 0;
+            const earnings = totalUsd * (earningsPercentage / 100);
+            const netResult = earnings;
+            
+            document.getElementById('calcInitialPrice').textContent = formatCurrency(initialPrice, 'TZS', false);
+            document.getElementById('calcThirtyPercent').textContent = formatCurrency(thirtyPercent, 'TZS', false);
+            document.getElementById('calcTotalTzs').textContent = formatCurrency(totalTzs, 'TZS', false);
+            document.getElementById('calcTotalUsd').textContent = formatCurrency(totalUsd, 'USD');
+            document.getElementById('calcEarnings').textContent = formatCurrency(earnings, 'USD');
+            document.getElementById('calcNetResult').textContent = formatCurrency(netResult, 'USD');
+        }
+
+        function updateDashboard() {
+            const totalOrders = orders.length;
+            const totalEarnings = orders.reduce((sum, order) => sum + order.earnings, 0);
+            const totalRevenue = orders.reduce((sum, order) => sum + order.totalUsd, 0);
+            const totalExpensesUsd = expenses.reduce((sum, expense) => sum + expense.expenseAmountUsd, 0);
+            const currentBalance = totalEarnings - totalExpensesUsd;
+            
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('totalEarnings').textContent = formatCurrency(totalEarnings, 'USD');
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue, 'USD');
+            document.getElementById('currentBalance').textContent = formatCurrency(currentBalance, 'USD');
+            
+            document.getElementById('miniExchangeRate').textContent = `${exchangeRate} TZS`;
+            
+            // Update recent orders table
+            updateRecentOrders();
+        }
+
+        function updateRecentOrders() {
+            const tbody = document.getElementById('recentOrdersBody');
+            const emptyState = document.getElementById('emptyRecentOrders');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = '';
+            
+            const recentOrders = orders.slice(0, 5);
+            
+            recentOrders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(order.orderDate)}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.productName}</td>
+                    <td>${formatCurrency(order.totalTzs, 'TZS', false)}</td>
+                    <td><span class="status-badge status-active">Completed</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateOrdersTable() {
+            const tbody = document.getElementById('ordersTableBody');
+            const emptyState = document.getElementById('emptyOrders');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = '';
+            
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(order.orderDate)}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.shopName}</td>
+                    <td>${order.productName}</td>
+                    <td>${order.productSize}</td>
+                    <td>${formatCurrency(order.initialPrice, 'TZS', false)}</td>
+                    <td><span class="profit">${formatCurrency(order.earnings, 'USD')}</span></td>
+                    <td><span class="status-badge status-active">Completed</span></td>
+                    <td>
+                        <button class="action-btn" onclick="viewOrder(${order.id})">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                        <button class="action-btn" onclick="deleteOrder(${order.id})" style="background: rgba(255, 107, 107, 0.1); color: var(--danger);">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateJournalTable() {
+            const tbody = document.getElementById('journalTableBody');
+            const emptyState = document.getElementById('emptyJournal');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = '';
+            
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(order.orderDate)}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.shopName}</td>
+                    <td>${order.productName}</td>
+                    <td>${order.productSize}</td>
+                    <td>${formatCurrency(order.initialPrice, 'TZS', false)}</td>
+                    <td>${formatCurrency(order.thirtyPercent, 'TZS', false)}</td>
+                    <td>${formatCurrency(order.totalTzs, 'TZS', false)}</td>
+                    <td>${formatCurrency(order.totalUsd, 'USD')}</td>
+                    <td><span class="profit">${formatCurrency(order.earnings, 'USD')}</span></td>
+                    <td>
+                        <button class="action-btn" onclick="viewOrder(${order.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateIncomeExpensePage() {
+            // Calculate totals
+            const totalEarnings = orders.reduce((sum, order) => sum + order.earnings, 0);
+            const totalExpensesUsd = expenses.reduce((sum, expense) => sum + expense.expenseAmountUsd, 0);
+            const netBalance = totalEarnings - totalExpensesUsd;
+            
+            // Update financial cards
+            document.getElementById('totalIncome').textContent = formatCurrency(totalEarnings, 'USD');
+            document.getElementById('incomeCount').textContent = orders.length;
+            document.getElementById('totalExpenses').textContent = formatCurrency(totalExpensesUsd, 'USD');
+            document.getElementById('expenseCount').textContent = expenses.length;
+            document.getElementById('netBalance').textContent = formatCurrency(netBalance, 'USD');
+            
+            // Update expenses table
+            updateExpensesTable();
+        }
+
+        function updateExpensesTable() {
+            const tbody = document.getElementById('expensesTableBody');
+            const emptyState = document.getElementById('emptyExpenses');
+            
+            if (expenses.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = '';
+            
+            expenses.forEach(expense => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(expense.expenseDate)}</td>
+                    <td>${expense.expenseType}</td>
+                    <td>${expense.expenseDescription}</td>
+                    <td>${formatCurrency(expense.expenseAmount, 'TZS', false)}</td>
+                    <td>${formatCurrency(expense.expenseAmountUsd, 'USD')}</td>
+                    <td>${expense.paymentMethod}</td>
+                    <td>
+                        <button class="action-btn" onclick="deleteExpense(${expense.id})" style="background: rgba(255, 107, 107, 0.1); color: var(--danger);">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateReports() {
+            if (orders.length === 0) {
+                document.getElementById('avgOrderValue').textContent = '$0.00';
+                document.getElementById('totalProducts').textContent = '0';
+                document.getElementById('popularProduct').textContent = '-';
+                document.getElementById('topShop').textContent = '-';
+                return;
+            }
+            
+            const avgOrderValue = orders.reduce((sum, order) => sum + order.totalUsd, 0) / orders.length;
+            document.getElementById('avgOrderValue').textContent = formatCurrency(avgOrderValue, 'USD');
+            
+            document.getElementById('totalProducts').textContent = orders.length;
+            
+            // Find most popular product
+            const productCounts = {};
+            orders.forEach(order => {
+                productCounts[order.productName] = (productCounts[order.productName] || 0) + 1;
+            });
+            const popularProduct = Object.keys(productCounts).reduce((a, b) => 
+                productCounts[a] > productCounts[b] ? a : b, 'N/A');
+            document.getElementById('popularProduct').textContent = popularProduct;
+            
+            // Find top shop
+            const shopCounts = {};
+            orders.forEach(order => {
+                shopCounts[order.shopName] = (shopCounts[order.shopName] || 0) + 1;
+            });
+            const topShop = Object.keys(shopCounts).reduce((a, b) => 
+                shopCounts[a] > shopCounts[b] ? a : b, 'N/A');
+            document.getElementById('topShop').textContent = topShop;
+        }
+
+        // Utility Functions
+        function viewOrder(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                alert(`Order Details:\n\n` +
+                      `Date: ${formatDate(order.orderDate)}\n` +
+                      `Customer: ${order.customerName}\n` +
+                      `Shop: ${order.shopName}\n` +
+                      `Product: ${order.productName} (${order.productSize})\n` +
+                      `Initial Price: ${formatCurrency(order.initialPrice, 'TZS', false)}\n` +
+                      `Your Earnings: ${formatCurrency(order.earnings, 'USD')}\n` +
+                      `Notes: ${order.notes || 'None'}`);
+            }
+        }
+
+        function filterExpenses() {
+            alert('Expense filter functionality would open here');
+        }
+
+        function exportOrders() {
+            if (orders.length === 0) {
+                showNotification('No orders to export', 'warning');
+                return;
+            }
+            
+            const headers = ['Date', 'Customer', 'Shop', 'Product', 'Size', 'Initial Price (TZS)', 'Earnings (USD)'];
+            const csvRows = orders.map(order => [
+                order.orderDate,
+                order.customerName,
+                order.shopName,
+                order.productName,
+                order.productSize,
+                order.initialPrice,
+                order.earnings.toFixed(2)
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...csvRows.map(row => row.join(','))
+            ].join('\n');
+            
+            downloadCSV(csvContent, `$mate-orders-${new Date().toISOString().slice(0, 10)}.csv`);
+            showNotification(`Exported ${orders.length} orders`, 'success');
+        }
+
+        function exportExpenses() {
+            if (expenses.length === 0) {
+                showNotification('No expenses to export', 'warning');
+                return;
+            }
+            
+            const headers = ['Date', 'Type', 'Description', 'Amount (TZS)', 'Amount (USD)', 'Payment Method'];
+            const csvRows = expenses.map(expense => [
+                expense.expenseDate,
+                expense.expenseType,
+                expense.expenseDescription,
+                expense.expenseAmount,
+                expense.expenseAmountUsd.toFixed(2),
+                expense.paymentMethod
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...csvRows.map(row => row.join(','))
+            ].join('\n');
+            
+            downloadCSV(csvContent, `$mate-expenses-${new Date().toISOString().slice(0, 10)}.csv`);
+            showNotification(`Exported ${expenses.length} expenses`, 'success');
+        }
+
+        function exportAllData() {
+            if (orders.length === 0 && expenses.length === 0) {
+                showNotification('No data to export', 'warning');
+                return;
+            }
+            
+            let csvContent = "=== ORDERS ===\n";
+            csvContent += 'Date,Customer,Shop,Product,Size,Initial Price (TZS),Earnings (USD)\n';
+            csvContent += orders.map(order => [
+                order.orderDate,
+                order.customerName,
+                order.shopName,
+                order.productName,
+                order.productSize,
+                order.initialPrice,
+                order.earnings.toFixed(2)
+            ].join(',')).join('\n');
+            
+            csvContent += "\n\n=== EXPENSES ===\n";
+            csvContent += 'Date,Type,Description,Amount (TZS),Amount (USD),Payment Method\n';
+            csvContent += expenses.map(expense => [
+                expense.expenseDate,
+                expense.expenseType,
+                expense.expenseDescription,
+                expense.expenseAmount,
+                expense.expenseAmountUsd.toFixed(2),
+                expense.paymentMethod
+            ].join(',')).join('\n');
+            
+            downloadCSV(csvContent, `$mate-all-data-${new Date().toISOString().slice(0, 10)}.csv`);
+            showNotification(`Exported ${orders.length} orders and ${expenses.length} expenses`, 'success');
+        }
+
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function printJournal() {
+            window.print();
+        }
+
+        function exportJournalPDF() {
+            showNotification('PDF export functionality would open here', 'info');
+        }
+
+        function generatePDFReport() {
+            showNotification('PDF report generation would open here', 'info');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: var(--bg-card);
+                color: var(--text-primary);
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-lg);
+                border-left: 4px solid ${type === 'success' ? 'var(--success)' : type === 'warning' ? 'var(--warning)' : type === 'danger' ? 'var(--danger)' : 'var(--primary)'};
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            const icon = document.createElement('i');
+            icon.className = type === 'success' ? 'fas fa-check-circle' : 
+                           type === 'warning' ? 'fas fa-exclamation-triangle' :
+                           type === 'danger' ? 'fas fa-times-circle' : 'fas fa-info-circle';
+            icon.style.color = type === 'success' ? 'var(--success)' : 
+                             type === 'warning' ? 'var(--warning)' :
+                             type === 'danger' ? 'var(--danger)' : 'var(--primary)';
+            
+            const text = document.createElement('span');
+            text.textContent = message;
+            
+            notification.appendChild(icon);
+            notification.appendChild(text);
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+            
+            // Add CSS for animations
+            if (!document.getElementById('notification-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-styles';
+                style.textContent = `
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOutRight {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        function formatCurrency(amount, currency = 'TZS', showSymbol = true) {
+            if (currency === 'USD') {
+                const formatted = Math.abs(amount).toFixed(2);
+                return `${amount < 0 ? '-' : ''}${showSymbol ? '$' : ''}${formatted}`;
+            } else {
+                const formatted = Math.abs(amount).toLocaleString('en-US', {
+                    maximumFractionDigits: 0
+                });
+                return `${amount < 0 ? '-' : ''}${formatted}${showSymbol ? ' TZS' : ''}`;
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Storage Functions
+        function loadFromStorage() {
+            const savedOrders = localStorage.getItem('$mate_orders');
+            const savedExpenses = localStorage.getItem('$mate_expenses');
+            const savedExchangeRate = localStorage.getItem('$mate_exchangeRate');
+            const savedTheme = localStorage.getItem('$mate_theme');
+            const savedProfile = localStorage.getItem('$mate_profile');
+            const savedSettings = localStorage.getItem('$mate_settings');
+            const savedUsers = localStorage.getItem('$mate_users');
+            const savedEarningsPercentage = localStorage.getItem('$mate_earningsPercentage');
+            
+            if (savedOrders) orders = JSON.parse(savedOrders);
+            if (savedExpenses) expenses = JSON.parse(savedExpenses);
+            if (savedExchangeRate) {
+                exchangeRate = parseFloat(savedExchangeRate);
+                document.getElementById('exchangeRate').value = exchangeRate;
+                document.getElementById('miniExchangeRate').textContent = `${exchangeRate} TZS`;
+            }
+            if (savedTheme === 'dark') document.body.classList.add('theme-dark');
+            if (savedProfile) userProfile = JSON.parse(savedProfile);
+            if (savedSettings) appSettings = JSON.parse(savedSettings);
+            if (savedUsers) users = JSON.parse(savedUsers);
+            if (savedEarningsPercentage) earningsPercentage = parseFloat(savedEarningsPercentage);
+            
+            // Update earnings percentage from settings if available
+            if (appSettings.earningsPercentage) {
+                earningsPercentage = appSettings.earningsPercentage;
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('$mate_orders', JSON.stringify(orders));
+            localStorage.setItem('$mate_expenses', JSON.stringify(expenses));
+            localStorage.setItem('$mate_exchangeRate', exchangeRate.toString());
+            localStorage.setItem('$mate_theme', document.body.classList.contains('theme-dark') ? 'dark' : 'light');
+            localStorage.setItem('$mate_profile', JSON.stringify(userProfile));
+            localStorage.setItem('$mate_settings', JSON.stringify(appSettings));
+            localStorage.setItem('$mate_users', JSON.stringify(users));
+            localStorage.setItem('$mate_earningsPercentage', earningsPercentage.toString());
+        }
+    </script>
+</body>
+</html>
